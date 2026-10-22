@@ -6,8 +6,8 @@ import { EXERCISE_IDS } from "@/lib/exercises";
 import { fallbackDays, MIN_EXERCISES, onlyKnownIds, validDays } from "@/lib/plan";
 import { buildPlan } from "@/lib/ai";
 import { hasOffLimitsTopic } from "@/lib/safety";
-import { aiUsageThisMonth, recordAiUse } from "@/lib/queries";
-import { APP } from "@/lib/config";
+import { recordAiUse, usageCount } from "@/lib/queries";
+import { LIMITS } from "@/lib/config";
 import { EXERCISES } from "@/lib/exercises";
 
 export const maxDuration = 60;
@@ -34,9 +34,9 @@ export const POST = handle(async (req) => {
     return json({ status: "blocked", message: safety.message });
   }
 
-  // 2. Free plan: a few plan builds per month.
-  if (user.plan !== "pro" && (await aiUsageThisMonth(user.id, "plan")) >= APP.freePlanBuildsPerMonth) {
-    return json({ error: `The free plan includes ${APP.freePlanBuildsPerMonth} plan builds a month. Upgrade to Pro for unlimited rebuilds.`, code: "limit" }, 402);
+  // 2. Fair use: Spotter is free, so the AI has a generous daily limit per person.
+  if ((await usageCount(user.id, "plan")) >= LIMITS.planBuildsPerDay) {
+    return json({ error: "You've rebuilt your plan a lot today. Please try again tomorrow." }, 429);
   }
 
   // 3. Ask the AI, then check everything it says. Anything off -> standard plan.

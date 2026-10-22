@@ -8,14 +8,27 @@ const g = globalThis as any;
 const SCHEMA = `
 create table if not exists users (
   id uuid primary key default gen_random_uuid(),
-  email text unique not null,
   name text not null,
-  password_hash text not null,
-  plan text not null default 'free',
-  stripe_customer_id text,
-  stripe_subscription_id text,
+  access_code_hash text,
+  ip_hash text,
   created_at timestamptz not null default now()
 );
+-- Upgrade older databases that had email + password sign-up (does nothing on a new database).
+do $$ begin
+  if exists (select 1 from information_schema.columns where table_name = 'users' and column_name = 'email') then
+    alter table users alter column email drop not null;
+  end if;
+  if exists (select 1 from information_schema.columns where table_name = 'users' and column_name = 'password_hash') then
+    alter table users alter column password_hash drop not null;
+  end if;
+  if exists (select 1 from information_schema.columns where table_name = 'users' and column_name = 'plan') then
+    alter table users alter column plan drop not null;
+  end if;
+end $$;
+alter table users add column if not exists access_code_hash text;
+alter table users add column if not exists ip_hash text;
+create unique index if not exists users_access_code_hash on users (access_code_hash);
+create index if not exists users_ip_time on users (ip_hash, created_at);
 create table if not exists profiles (
   user_id uuid primary key references users(id) on delete cascade,
   goal text not null,

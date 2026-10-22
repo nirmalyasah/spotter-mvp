@@ -68,9 +68,10 @@ export async function recentSessions(uid: string, limit = 8) {
   return rows.map((r) => ({ ...r, completed_at: new Date(r.completed_at).toISOString(), volume: Number(r.volume) }));
 }
 
-export async function aiUsageThisMonth(uid: string, kind: string) {
+// How many times someone used an AI feature recently. Used for the daily fair-use limits.
+export async function usageCount(uid: string, kind: string, hours = 24) {
   const r = await q<{ n: number }>(
-    `select count(*)::int as n from ai_usage where user_id = $1 and kind = $2 and created_at > now() - interval '30 days'`, [uid, kind]);
+    `select count(*)::int as n from ai_usage where user_id = $1 and kind = $2 and created_at > now() - ($3 || ' hours')::interval`, [uid, kind, String(hours)]);
   return r[0].n;
 }
 export const recordAiUse = (uid: string, kind: string) => q(`insert into ai_usage (user_id, kind) values ($1, $2)`, [uid, kind]);

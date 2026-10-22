@@ -35,7 +35,7 @@ export default async function Today() {
       name={user.name.split(" ")[0]} summary={profile.summary} welcome={profile.welcome} fallback={plan!.fallback}
       preview={preview} dayNumber={day + 1}
       stats={{ total: stats.total, thisWeek: stats.thisWeek, streakWeeks: stats.streakWeeks, daysSince: stats.daysSince, daysPerWeek: profile.days_per_week }}
-      comeback={cb ? { message: cb.message, email: cb.email_text, ai: cb.ai, daysMissed: cb.days_missed } : null}
+      comeback={cb ? { message: cb.message, ai: cb.ai, daysMissed: cb.days_missed } : null}
     />
   );
 }

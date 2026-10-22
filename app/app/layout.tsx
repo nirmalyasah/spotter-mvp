@@ -11,14 +11,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
           <Logo href="/app" />
           <div className="hidden md:block"><NavLinks /></div>
-          <Link href="/app/settings" className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-            <span className={`chip ${user.plan === "pro" ? "!bg-amber-100 !text-amber-800 !ring-amber-200" : ""}`}>{user.plan === "pro" ? "PRO" : "FREE"}</span>
-            <span className="hidden sm:inline">{user.name.split(" ")[0]}</span>
+          <Link href="/app/settings" className="flex items-center gap-2 rounded-full bg-slate-100 py-1 pl-1 pr-3 text-sm font-semibold text-slate-700 hover:bg-slate-200">
+            <span className="grid h-7 w-7 place-items-center rounded-full bg-emerald-600 text-xs font-bold text-white">{user.name.trim().charAt(0).toUpperCase()}</span>
+            <span className="max-w-24 truncate">{user.name.split(" ")[0]}</span>
           </Link>
         </div>
       </header>
       <main className="mx-auto max-w-4xl px-4 py-6">{children}</main>
-      <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white md:hidden"><NavLinks mobile /></nav>
+      <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white md:hidden" aria-label="Main"><NavLinks mobile /></nav>
     </div>
   );
 }

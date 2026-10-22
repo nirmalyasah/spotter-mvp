@@ -9,12 +9,6 @@ export async function apiUser() {
   return u;
 }
 
-export async function proUser() {
-  const u = await apiUser();
-  if (u.plan !== "pro") throw json({ error: "This is a Spotter Pro feature.", code: "pro_required" }, 402);
-  return u;
-}
-
 // Wraps a route so thrown responses are returned and surprises become a friendly error.
 export const handle = (fn: (req: Request) => Promise<Response>) => async (req: Request) => {
   try {
@@ -25,6 +19,10 @@ export const handle = (fn: (req: Request) => Promise<Response>) => async (req: R
     return json({ error: "Something went wrong. Please try again." }, 500);
   }
 };
+
+export function clientIp(req: Request) {
+  return (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() || req.headers.get("x-real-ip") || "local";
+}
 
 export async function body<T>(req: Request, schema: { safeParse: (v: unknown) => any }): Promise<T> {
   const raw = await req.json().catch(() => null);

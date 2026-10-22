@@ -71,10 +71,10 @@ export function writeComeback(p: ProfileText, usual: string[], available: string
     `You are Spotter, a kind gym buddy. Write short, gentle, guilt-free messages. Pick exercises ONLY from the list, by id. ${SAFE}`,
     `About the person: ${p.summary || p.goal}\nThey usually do: ${usual.join(", ")}\nThey missed ${daysMissed} days.\nWhy (their words, may be empty): ${reason || "not said"}\n\n` +
       `Exercises available (use only these ids):\n${listFor(available)}\n\n` +
-      "Pick 2 of the easiest exercises for a short comeback session. Write a 1-2 sentence on-screen message and a short friendly email body (3-4 sentences). No guilt.",
+      "Pick 2 of the easiest exercises for a short comeback session. Write a warm, short on-screen message (2 sentences). No guilt.",
     "make_comeback",
-    { type: "object", properties: { exerciseIds: { type: "array", items: idsEnum(available) }, message: { type: "string" }, email: { type: "string" } }, required: ["exerciseIds", "message", "email"] },
-  ) as Promise<{ exerciseIds: string[]; message: string; email: string }>;
+    { type: "object", properties: { exerciseIds: { type: "array", items: idsEnum(available) }, message: { type: "string" } }, required: ["exerciseIds", "message"] },
+  ) as Promise<{ exerciseIds: string[]; message: string }>;
 }
 
 export function diagnosePlateau(p: ProfileText, facts: string) {

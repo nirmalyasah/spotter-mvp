@@ -6,7 +6,7 @@ import WorkoutRunner, { type SessionView } from "./WorkoutRunner";
 type Props = {
   name: string; summary: string; welcome: string; fallback: boolean; preview: string[]; dayNumber: number;
   stats: { total: number; thisWeek: number; streakWeeks: number; daysSince: number; daysPerWeek: number };
-  comeback: { message: string; email: string; ai: boolean; daysMissed: number } | null;
+  comeback: { message: string; ai: boolean; daysMissed: number } | null;
 };
 
 export default function TodayClient(p: Props) {
@@ -22,6 +22,17 @@ export default function TodayClient(p: Props) {
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "Couldn't start the workout."); if (data.code === "onboarding") router.push("/onboarding"); return; }
       setSession(data);
+    } catch { setError("We couldn't reach the server. Check your connection."); }
+    finally { setBusy(false); }
+  }
+
+  async function comebackNow() {
+    setBusy(true); setError("");
+    try {
+      const res = await fetch("/api/comeback", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? "Something went wrong."); return; }
+      router.refresh();
     } catch { setError("We couldn't reach the server. Check your connection."); }
     finally { setBusy(false); }
   }
@@ -49,6 +60,14 @@ export default function TodayClient(p: Props) {
           <p className="mt-3 text-lg font-semibold">{p.comeback.message}</p>
           <p className="mt-2 text-sm text-slate-500">You've been away {p.comeback.daysMissed} days. Today is a shorter, lighter session: 2 exercises at about 80% of your weight.</p>
           <button className="btn btn-primary mt-4 w-full" onClick={start} disabled={busy}>{busy ? "Loading…" : "Start my comeback session"}</button>
+        </div>
+      ) : p.stats.daysSince >= 3 && p.stats.total > 0 ? (
+        <div className="card ring-2 ring-emerald-400">
+          <span className="chip">It's been {p.stats.daysSince} days</span>
+          <p className="mt-3 text-lg font-semibold">No guilt. Missing a few days happens to everyone.</p>
+          <p className="mt-1 text-sm text-slate-500">Spotter can write you a shorter, lighter session to ease back in.</p>
+          <button className="btn btn-primary mt-4 w-full" onClick={comebackNow} disabled={busy}>{busy ? "Writing your session… about 10 seconds" : "Get my comeback session"}</button>
+          <button className="mt-3 w-full text-sm text-slate-500 underline" onClick={start} disabled={busy}>Or just start my normal workout</button>
         </div>
       ) : (
         <div className="card">

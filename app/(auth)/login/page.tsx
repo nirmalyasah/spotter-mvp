@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import AuthForm from "@/app/components/AuthForm";
+import Link from "next/link";
+import CodeLogin from "@/app/components/CodeLogin";
 import Logo from "@/app/components/Logo";
 import { currentUser } from "@/lib/auth";
 
@@ -10,7 +11,8 @@ export default async function Page() {
   return (
     <main className="mx-auto max-w-md px-4 py-6">
       <Logo />
-      <div className="mt-8"><AuthForm mode="login" /></div>
+      <div className="mt-8"><CodeLogin /></div>
+      <p className="mt-4 text-center text-sm text-slate-600">New here? <Link href="/signup" className="font-semibold text-emerald-700">Join free with just your name</Link></p>
     </main>
   );
 }

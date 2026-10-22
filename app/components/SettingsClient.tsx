@@ -2,14 +2,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { EXERCISES } from "@/lib/exercises";
+import AccessCodeCard from "./AccessCodeCard";
 
-export default function SettingsClient({ available, hasProfile, demo, isPro }: { available: string[]; hasProfile: boolean; demo: boolean; isPro: boolean }) {
+export default function SettingsClient({ available, hasProfile, demo }: { available: string[]; hasProfile: boolean; demo: boolean }) {
   const router = useRouter();
   const [avail, setAvail] = useState(available);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState("");
   const [reason, setReason] = useState("");
+  const [code, setCode] = useState("");
 
   async function call(label: string, url: string, method: string, data?: unknown, ok?: string) {
     setBusy(label); setMsg(""); setErr("");
@@ -22,6 +24,11 @@ export default function SettingsClient({ available, hasProfile, demo, isPro }: {
     finally { setBusy(""); }
   }
 
+  async function newCode() {
+    if (!confirm("Make a new access code? Your old code will stop working.")) return;
+    const out = await call("code", "/api/auth/code", "POST");
+    if (out?.code) setCode(out.code);
+  }
   async function logout() { await fetch("/api/auth/logout", { method: "POST" }); router.push("/"); router.refresh(); }
   async function del() {
     if (!confirm("Delete your account and ALL your data? This can't be undone.")) return;
@@ -31,6 +38,13 @@ export default function SettingsClient({ available, hasProfile, demo, isPro }: {
 
   return (
     <>
+      <div className="card">
+        <p className="font-bold">🔑 Your access code</p>
+        <p className="mt-1 text-sm text-slate-600">Spotter has no passwords. Your access code is how you get back in from another phone or browser. For safety we can't show your old code again, but you can make a new one.</p>
+        {code && <div className="mt-4 space-y-3"><AccessCodeCard code={code} /><p className="notice">Save this now. It won't be shown again, and your old code no longer works.</p></div>}
+        <button className="btn btn-ghost mt-4" onClick={newCode} disabled={busy === "code"}>{busy === "code" ? "Working…" : code ? "Make another new code" : "Make a new access code"}</button>
+      </div>
+
       {hasProfile && (
         <div className="card">
           <p className="font-bold">Machines your gym has</p>
@@ -50,10 +64,9 @@ export default function SettingsClient({ available, hasProfile, demo, isPro }: {
           <p className="font-bold">🧪 Demo tools</p>
           <p className="mb-3 text-sm text-slate-500">For showing Spotter off without waiting days or weeks. Hidden on a live site unless switched on.</p>
           <input className="input mb-3" placeholder="Why did you miss days? (optional, e.g. exams)" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} />
-          <div className="grid gap-2 sm:grid-cols-3">
+          <div className="grid gap-2 sm:grid-cols-2">
             <button className="btn btn-ghost" disabled={!!busy} onClick={() => call("sim", "/api/demo", "POST", { action: "simulate", reason }, "3 days passed. Open Today to see your comeback session.")}>{busy === "sim" ? "Working…" : "Pretend 3 days passed"}</button>
             <button className="btn btn-ghost" disabled={!!busy} onClick={() => call("seed", "/api/demo", "POST", { action: "seed" }, "Added 6 weeks of history. Check Progress, and the plateau check on Coach.")}>{busy === "seed" ? "Working…" : "Add 6 weeks of history"}</button>
-            <button className="btn btn-ghost" disabled={!!busy} onClick={() => call("pro", "/api/demo", "POST", { action: "toggle-pro" }, isPro ? "Switched to Free." : "Switched to Pro.")}>{busy === "pro" ? "Working…" : isPro ? "Switch to Free" : "Switch to Pro (demo)"}</button>
           </div>
         </div>)}
 
@@ -62,10 +75,10 @@ export default function SettingsClient({ available, hasProfile, demo, isPro }: {
       <div className="card">
         <p className="font-bold">Account actions</p>
         <div className="mt-3 flex flex-wrap gap-3">
-          <button className="btn btn-ghost" onClick={logout}>Log out</button>
+          <button className="btn btn-ghost" onClick={logout}>Log out on this device</button>
           <button className="btn !bg-red-50 !text-red-700 ring-1 ring-red-200 hover:!bg-red-100" onClick={del} disabled={busy === "delete"}>Delete my account and data</button>
         </div>
-        <p className="mt-3 text-xs text-slate-400">Spotter gives general guidance, not medical advice. <a className="underline" href="/legal">Terms, privacy and disclaimer</a></p>
+        <p className="mt-3 text-xs text-slate-400">Logging out? Make sure you've saved your access code first. Spotter gives general guidance, not medical advice. <a className="underline" href="/legal">Terms, privacy and disclaimer</a></p>
       </div>
     </>
   );
