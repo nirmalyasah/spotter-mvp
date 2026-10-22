@@ -1,5 +1,6 @@
 import { q, databaseUrl } from "@/lib/db";
 import { aiConfigured } from "@/lib/ai";
+import { sessionSecretSource } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -8,8 +9,8 @@ export async function GET() {
   let db = false, dbError: string | undefined;
   try { await q("select 1"); db = true; } catch (e) { dbError = String((e as Error).message ?? e).slice(0, 140); }
   return Response.json({
-    ok: db && !!process.env.SESSION_SECRET, db, dbError,
-    databaseAddressSet: !!databaseUrl(), sessionSecretSet: !!process.env.SESSION_SECRET,
+    ok: db && sessionSecretSource() !== "none", db, dbError,
+    databaseAddressSet: !!databaseUrl(), sessionSecretSet: sessionSecretSource() !== "none", sessionSecretFrom: sessionSecretSource(),
     ai: aiConfigured(), cron: !!process.env.CRON_SECRET,
   });
 }

@@ -2,20 +2,27 @@ import { SignJWT, jwtVerify } from "jose";
 import { createHash, randomBytes } from "crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { q } from "./db.ts";
+import { q, databaseUrl } from "./db.ts";
 
 // No email, no password: an account is just a name. A signed cookie keeps you logged in, and a short
 // access code lets you get back in from another phone or browser.
 const COOKIE = "spotter_session";
 const prod = process.env.NODE_ENV === "production";
 
+// The key that signs login cookies. Best: set SESSION_SECRET yourself. If you haven't, a key is made from the
+// private database address instead, so the site still works (it just can't be rotated without changing the database).
+export function sessionSecretSource(): "env" | "database" | "none" {
+  if (process.env.SESSION_SECRET) return "env";
+  if (databaseUrl()) return "database";
+  return "none";
+}
+
 function secret() {
-  const s = process.env.SESSION_SECRET;
-  if (!s) {
-    if (prod) throw new Error("SESSION_SECRET is not set");
-    return new TextEncoder().encode("dev-only-secret-change-me-please-32chars");
-  }
-  return new TextEncoder().encode(s);
+  const source = sessionSecretSource();
+  if (source === "env") return new TextEncoder().encode(process.env.SESSION_SECRET!);
+  if (source === "database") return createHash("sha256").update(`spotter-session-key|${databaseUrl()}`).digest();
+  if (prod) throw new Error("No SESSION_SECRET and no database address to make one from");
+  return new TextEncoder().encode("dev-only-secret-change-me-please-32chars");
 }
 
 // 10 characters from an alphabet without look-alikes (no 0/O, 1/I): about 50 bits of randomness.

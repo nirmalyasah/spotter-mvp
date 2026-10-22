@@ -158,7 +158,7 @@ npm run build     # production build
 2. **Add a database:** Project → *Storage* → *Create Database* → **Neon** (free). This adds `DATABASE_URL` for you. Tables are created automatically on the first request. If you deployed the earlier email/password version, the existing tables are upgraded automatically.
 3. **Add environment variables** (Project → Settings → Environment Variables; see [.env.example](.env.example)):
    - `OPENROUTER_API_KEY`: your AI key
-   - `SESSION_SECRET`: a long random string (run `openssl rand -base64 32`)
+   - `SESSION_SECRET` (recommended): a long random string (run `openssl rand -base64 32`). If you skip it, a signing key is made from the database address.
    - `CRON_SECRET`: another long random string, used by the daily comeback job in [vercel.json](vercel.json)
    - Optional: `ALLOW_DEMO_TOOLS=1` to keep the demo tools visible on the live site while you show it off
    - Optional: `SIGNUP_LIMIT_PER_HOUR` (default 8 per network). Raise it if many people join from one venue's Wi-Fi.
