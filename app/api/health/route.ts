@@ -1,11 +1,15 @@
-import { q } from "@/lib/db";
+import { q, databaseUrl } from "@/lib/db";
 import { aiConfigured } from "@/lib/ai";
 
 export const dynamic = "force-dynamic";
 
-// A quick "is everything switched on?" check. It only reports yes/no, never any secrets.
+// A quick "is everything switched on?" check. It only reports yes/no and a short reason, never any secrets.
 export async function GET() {
-  let db = false;
-  try { await q("select 1"); db = true; } catch {}
-  return Response.json({ ok: db, db, ai: aiConfigured(), cron: !!process.env.CRON_SECRET });
+  let db = false, dbError: string | undefined;
+  try { await q("select 1"); db = true; } catch (e) { dbError = String((e as Error).message ?? e).slice(0, 140); }
+  return Response.json({
+    ok: db && !!process.env.SESSION_SECRET, db, dbError,
+    databaseAddressSet: !!databaseUrl(), sessionSecretSet: !!process.env.SESSION_SECRET,
+    ai: aiConfigured(), cron: !!process.env.CRON_SECRET,
+  });
 }

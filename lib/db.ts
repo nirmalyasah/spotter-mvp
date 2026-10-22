@@ -112,14 +112,24 @@ create table if not exists ai_usage (
 );
 `;
 
+// Vercel's database integrations can name the variable a few different ways, so look for any of them.
+export function databaseUrl(): string | undefined {
+  const e = process.env;
+  const direct = e.DATABASE_URL || e.POSTGRES_URL || e.POSTGRES_PRISMA_URL;
+  if (direct) return direct;
+  const prefixed = Object.keys(e).find((k) => /(DATABASE|POSTGRES)_URL$/.test(k) && !/UNPOOLED|NON_POOLING/.test(k) && e[k]);
+  return prefixed ? e[prefixed] : undefined;
+}
+
 async function init() {
-  if (process.env.DATABASE_URL) {
+  const url = databaseUrl();
+  if (url) {
     // Live: a real Postgres (e.g. Neon from the Vercel Marketplace).
-    const sql = postgres(process.env.DATABASE_URL, { max: 1, prepare: false, idle_timeout: 20 });
+    const sql = postgres(url, { max: 1, prepare: false, idle_timeout: 20 });
     await sql.unsafe(SCHEMA);
     return { run: async (text: string, params: any[] = []) => (await sql.unsafe(text, params)) as unknown as Row[] };
   }
-  if (process.env.NODE_ENV === "production") throw new Error("DATABASE_URL is not set");
+  if (process.env.NODE_ENV === "production") throw new Error("No database address found (DATABASE_URL is not set)");
   // Local development: an embedded Postgres saved in ./data, so there's nothing to install.
   const { PGlite } = await import("@electric-sql/pglite");
   mkdirSync("./data", { recursive: true });
