@@ -33,7 +33,7 @@ export default function NameStart({ big = false, button = "Start free" }: { big?
         <button className={`btn btn-primary shrink-0 ${big ? "text-lg" : ""}`} disabled={busy}>{busy ? "One moment…" : button}</button>
       </div>
       {error && <p className="error mt-3" role="alert">{error}</p>}
-      <p className="mt-2 text-sm text-slate-500">That's it. No email, no password, no card.</p>
+      <p className="mt-2 text-sm text-slate-500">That's it. No email, no password, no card. Your first 3 workouts are free.</p>
     </form>
   );
 }

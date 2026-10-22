@@ -29,6 +29,7 @@ export default function OnboardingWizard({ initialAvailable }: { initialAvailabl
   const [avail, setAvail] = useState<string[]>(initialAvailable);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [upgrade, setUpgrade] = useState(false);
   const [blocked, setBlocked] = useState("");
     const step = Object.keys(answers).length;
   const chatDone = step >= QUESTIONS.length;
@@ -41,12 +42,12 @@ export default function OnboardingWizard({ initialAvailable }: { initialAvailabl
   }
 
   async function build(forceStandard = false) {
-    setBusy(true); setError("");
+    setBusy(true); setError(""); setUpgrade(false);
     try {
       const res = await fetch("/api/onboarding", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...answers, availableIds: avail, forceStandard }) });
       const data = await res.json();
       if (data.status === "blocked") { setBlocked(data.message); return; }
-      if (!res.ok) { setError(data.error ?? "Something went wrong."); return; }
+      if (!res.ok) { setError(data.error ?? "Something went wrong."); setUpgrade(data.code === "upgrade"); return; }
       router.push("/app"); router.refresh();
     } catch { setError("We couldn't reach the server. Check your connection and try again."); }
     finally { setBusy(false); }
@@ -92,9 +93,9 @@ export default function OnboardingWizard({ initialAvailable }: { initialAvailabl
                 <span><span className="font-semibold">{e.name}</span><span className="block text-xs text-slate-500">{e.equipment}</span></span>
               </label>))}
           </div>
-          {error && <p className="error mt-3" role="alert">{error}</p>}
+          {error && <p className="error mt-3" role="alert">{error}{upgrade && <> Spotter Plus is coming soon. <a className="font-semibold underline" href="/app/settings">Join the waitlist</a>.</>}</p>}
           <button className="btn btn-primary mt-4 w-full" disabled={busy} onClick={() => build()}>{busy ? "Building your plan… about 10 seconds" : "Build my plan"}</button>
-          {error && <button className="mt-3 w-full text-sm text-slate-500 underline" disabled={busy} onClick={() => build(true)}>Use a standard beginner plan instead</button>}
+          {error && !upgrade && <button className="mt-3 w-full text-sm text-slate-500 underline" disabled={busy} onClick={() => build(true)}>Use a standard beginner plan instead</button>}
         </div>
       )}
     </div>

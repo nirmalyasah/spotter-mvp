@@ -7,7 +7,8 @@ import { fallbackDays, MIN_EXERCISES, onlyKnownIds, validDays } from "@/lib/plan
 import { buildPlan } from "@/lib/ai";
 import { hasOffLimitsTopic } from "@/lib/safety";
 import { recordAiUse, usageCount } from "@/lib/queries";
-import { LIMITS } from "@/lib/config";
+import { FREE, LIMITS } from "@/lib/config";
+import { getAccess } from "@/lib/access";
 import { EXERCISES } from "@/lib/exercises";
 
 export const maxDuration = 60;
@@ -34,7 +35,11 @@ export const POST = handle(async (req) => {
     return json({ status: "blocked", message: safety.message });
   }
 
-  // 2. Fair use: Spotter is free, so the AI has a generous daily limit per person.
+  // 2. Limits: the free trial allows a couple of plan builds; everyone has a fair-use daily limit.
+  const access = await getAccess(user.id, user.plan);
+  if (!access.paid && (access.buildsLeft ?? 0) <= 0) {
+    return json({ error: `You've used your ${FREE.planBuilds} free plan builds. Spotter Plus lets you rebuild any time.`, code: "upgrade" }, 402);
+  }
   if ((await usageCount(user.id, "plan")) >= LIMITS.planBuildsPerDay) {
     return json({ error: "You've rebuilt your plan a lot today. Please try again tomorrow." }, 429);
   }

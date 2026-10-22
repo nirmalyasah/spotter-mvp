@@ -46,14 +46,14 @@ export async function endSession() {
   (await cookies()).delete(COOKIE);
 }
 
-export type SessionUser = { id: string; name: string };
+export type SessionUser = { id: string; name: string; plan: string };
 
 export async function currentUser(): Promise<SessionUser | null> {
   try {
     const token = (await cookies()).get(COOKIE)?.value;
     if (!token) return null;
     const { payload } = await jwtVerify(token, secret());
-    const rows = await q<SessionUser>(`select id, name from users where id = $1`, [payload.sub]);
+    const rows = await q<SessionUser>(`select id, name, coalesce(plan, 'free') as plan from users where id = $1`, [payload.sub]);
     return rows[0] ?? null;
   } catch {
     return null;

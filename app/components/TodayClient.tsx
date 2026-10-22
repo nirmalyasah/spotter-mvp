@@ -2,11 +2,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import WorkoutRunner, { type SessionView } from "./WorkoutRunner";
+import PlusSoon from "./PlusSoon";
 
 type Props = {
   name: string; summary: string; welcome: string; fallback: boolean; preview: string[]; dayNumber: number;
   stats: { total: number; thisWeek: number; streakWeeks: number; daysSince: number; daysPerWeek: number };
   comeback: { message: string; ai: boolean; daysMissed: number } | null;
+  access: { paid: boolean; workoutsLeft: number | null; freeWorkouts: number; plusPrice: number };
+  onWaitlist: boolean;
 };
 
 export default function TodayClient(p: Props) {
@@ -20,7 +23,7 @@ export default function TodayClient(p: Props) {
     try {
       const res = await fetch("/api/workout/start", { method: "POST" });
       const data = await res.json();
-      if (!res.ok) { setError(data.error ?? "Couldn't start the workout."); if (data.code === "onboarding") router.push("/onboarding"); return; }
+      if (!res.ok) { setError(data.error ?? "Couldn't start the workout."); if (data.code === "onboarding") router.push("/onboarding"); if (data.code === "upgrade") router.refresh(); return; }
       setSession(data);
     } catch { setError("We couldn't reach the server. Check your connection."); }
     finally { setBusy(false); }
@@ -31,7 +34,7 @@ export default function TodayClient(p: Props) {
     try {
       const res = await fetch("/api/comeback", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
       const data = await res.json();
-      if (!res.ok) { setError(data.error ?? "Something went wrong."); return; }
+      if (!res.ok) { setError(data.error ?? "Something went wrong."); if (data.code === "upgrade") router.refresh(); return; }
       router.refresh();
     } catch { setError("We couldn't reach the server. Check your connection."); }
     finally { setBusy(false); }
@@ -39,7 +42,8 @@ export default function TodayClient(p: Props) {
 
   if (session) return <WorkoutRunner session={session} onExit={() => { setSession(null); router.refresh(); }} />;
 
-  const { stats } = p;
+  const { stats, access } = p;
+  const locked = !access.paid && access.workoutsLeft === 0;
   return (
     <div className="space-y-5">
       <div>
@@ -54,7 +58,19 @@ export default function TodayClient(p: Props) {
 
       {p.fallback && <p className="notice">This is a <b>standard starter plan</b>. The AI wasn't available when it was built, so it isn't personalised. You can rebuild it in Settings.</p>}
 
-      {p.comeback ? (
+      {!access.paid && !locked && (
+        <p className="notice !bg-emerald-50 !text-emerald-900 !ring-emerald-200">🎁 <b>Free try-out:</b> {access.workoutsLeft} of your {access.freeWorkouts} free workouts left. Spotter Plus for daily users is coming soon.</p>
+      )}
+
+      {locked ? (
+        <div className="card ring-2 ring-emerald-400">
+          <span className="chip">Free try-out complete 🎉</span>
+          <p className="mt-3 text-xl font-extrabold">You've done your {access.freeWorkouts} free workouts. Nice work!</p>
+          <p className="mt-2 text-slate-600">Spotter Plus is the version for people who train every day: unlimited workouts, automatic weight progression, comeback sessions, the plateau check and an unlimited AI coach. It's planned at ₹{access.plusPrice}/month and it's <b>coming soon</b>. It isn't on sale yet and nothing is charged.</p>
+          <div className="mt-4"><PlusSoon initialJoined={p.onWaitlist} label="Join the Plus waitlist" /></div>
+          <p className="mt-3 text-sm text-slate-500">Your plan, weights and progress are all saved. You can still browse your plan, the library and your progress.</p>
+        </div>
+      ) : p.comeback ? (
         <div className="card ring-2 ring-emerald-400">
           <div className="flex items-center gap-2"><span className="chip">Welcome back</span><span className="text-xs text-slate-400">{p.comeback.ai ? "written by AI" : "standard message"}</span></div>
           <p className="mt-3 text-lg font-semibold">{p.comeback.message}</p>

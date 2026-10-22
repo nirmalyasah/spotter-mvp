@@ -1,8 +1,10 @@
 # Spotter — your AI gym buddy
 
-Spotter tells a nervous gym beginner exactly what to do next: which machine, how to set it up, how much weight, and how to come back after a missed week. It's a full-stack web app with a real database and an AI coach, and **it's completely free to use, with every feature, for everyone**.
+Spotter tells a nervous gym beginner exactly what to do next: which machine, how to set it up, how much weight, and how to come back after a missed week. It's a full-stack web app with a real database and an AI coach.
 
-**Sign-up is just a name.** No email, no password, no card.
+**Two versions:**
+- **Try free (live now):** a one-time free try-out when you sign up. **Sign-up is just a name** (no email, no password, no card).
+- **Spotter Plus (coming soon):** the paid version for people who train every day, planned at ₹199/month. **It isn't on sale and there is no payment method in the app.** Users can join a waitlist.
 
 The original problem statement and scope are in [docs/MVP_SCOPE.md](docs/MVP_SCOPE.md).
 
@@ -16,7 +18,7 @@ Beginner and intermediate gym-goers spend their first 3–4 months guessing at m
 
 | Page | What it's for |
 |---|---|
-| **Landing** (`/`) | Pitch, how it works, "free for everyone", FAQ. The name box is right in the hero. |
+| **Landing** (`/`) | Pitch, how it works, the two versions with pricing, FAQ. The name box is right in the hero. |
 | **Welcome** (`/welcome`) | Shown once after joining: your access code, then on to setup |
 | **Setup** (`/onboarding`) | 5 questions in your own words, then tick the machines your gym has |
 | **Today** (`/app`) | Your next workout, stats, and the comeback card when you've been away |
@@ -24,7 +26,7 @@ Beginner and intermediate gym-goers spend their first 3–4 months guessing at m
 | **Library** (`/app/library`) | All 15 exercises with set-up steps and tips, so you can learn a machine before touching it |
 | **Progress** (`/app/progress`) | Streak, workouts per week, a chart for every lift |
 | **Coach** (`/app/coach`) | Ask Spotter anything, and run the plateau check |
-| **Settings** (`/app/settings`) | Access code, machines, rebuild plan, log out, delete everything |
+| **Settings** (`/app/settings`) | Your plan and free try-out left, the Plus waitlist, access code, machines, rebuild plan, log out, delete everything |
 | **Log in** (`/login`) | For getting back in from another device with your access code |
 
 ## Name-only accounts: how they work
@@ -32,9 +34,27 @@ Beginner and intermediate gym-goers spend their first 3–4 months guessing at m
 - You type a name and you're in. A signed, `httpOnly` cookie (valid for a year) keeps you logged in on that device.
 - There is no password to forget, so you're given a **10-character access code** (like `K7M2Q-9XAB4`). It's the only way back in from another phone or browser. It's stored only as a hash, so we can't show it again, but **Settings → Make a new access code** replaces it.
 - **Trade-off, stated plainly:** anyone who has your code, or your unlocked device, can open your account, and if you lose both you can't recover it. That's the price of "just a name". Email recovery could be added later.
-- To stop abuse of the free AI: a limit on sign-ups per network per hour, and generous daily limits per person on plan builds, coach messages, plateau checks and comebacks ([lib/config.ts](lib/config.ts)).
+- To stop abuse of the AI: a limit on sign-ups per network per hour, and daily fair-use limits per person on plan builds, coach messages, plateau checks and comebacks ([lib/config.ts](lib/config.ts)).
 
-## What's in the product (all free)
+## The two versions
+
+| | **Try free** (one time) | **Spotter Plus** (coming soon, planned ₹199/month) |
+|---|---|---|
+| Workouts | First **3** (one full lap of the plan) | Unlimited, every day |
+| AI-built plan | 2 builds | Unlimited rebuilds |
+| Weight progression | Yes, within those workouts | Yes, every workout |
+| Comeback sessions | Within the free workouts | Yes |
+| Plateau check | Not included | Yes |
+| AI coach chat | 5 questions | Unlimited |
+| Exercise library, plan view, progress charts | Yes | Yes |
+
+The limits live in one place, [lib/config.ts](lib/config.ts) (`FREE`), and can be changed with the `FREE_WORKOUTS`, `FREE_COACH_QUESTIONS` and `FREE_PLAN_BUILDS` settings. When a free user runs out, they see a friendly "free try-out complete" screen and a **Join the Plus waitlist** button. Nothing is charged and no card is asked for. Their plan and progress stay saved, and they can still browse their plan, the library and their progress.
+
+**Showing it off:** with demo tools on (always on locally; `ALLOW_DEMO_TOOLS=1` on a live site), **Settings → Preview Plus (demo)** switches the account to Plus so you can show every feature. This isn't a way to pay. It only flips a switch for demos.
+
+**Adding real payments later:** the user's `plan` is stored as `free` or `plus`, and every limit already checks it (`lib/access.ts`). Payments would only need a checkout page and a way to flip `plan` to `plus`.
+
+## What's in the product
 
 | Area | What it does |
 |---|---|
@@ -43,7 +63,7 @@ Beginner and intermediate gym-goers spend their first 3–4 months guessing at m
 | **Auto progression** | Every set done → the weight goes up a safe, capped step. A missed set → it stays. Plain code. |
 | **Comeback** | After 3 days with no workout, a shorter, lighter session written by the AI. A daily job prepares it, or tap "Get my comeback session". |
 | **Progress** | Streak, workouts per week, a chart per lift, recent sessions |
-| **Plateau check** | A rule flags lifts stuck 3+ weeks; the AI explains why and what to try |
+| **Plateau check** (Plus) | A rule flags lifts stuck 3+ weeks; the AI explains why and what to try |
 | **Ask Spotter** | AI coach chat about machines, form, weights and motivation. Health, diet, drugs and mental-health questions are refused with a referral. |
 | **Safety** | Under 18 / over 55 / pain / health condition / drugs / diet plans → no plan, "a person needs to check this first" |
 | **"This looks wrong"** | Every exercise card has a report button |
@@ -57,7 +77,7 @@ Beginner and intermediate gym-goers spend their first 3–4 months guessing at m
 | 2 | I log my sets, "3 days pass", and a shorter, lighter **comeback session** appears. | Works, in the app |
 | 3 | **Bad input** is handled: blank or nonsense answers, under-18 / over-55 / pain / drugs. | Re-asked, or "a person needs to check this first" |
 
-`npm run e2e` runs 51 checks against a running app, covering all three.
+`npm run e2e` runs 67 checks against a running app, covering all three plus the free try-out limits and the Plus waitlist.
 
 ## Current workflow → future workflow
 
@@ -78,7 +98,7 @@ Beginner and intermediate gym-goers spend their first 3–4 months guessing at m
 | **Plan** | 5 answers + machines ticked | Understands the answers, picks exercise **IDs** | Safety rules *before* the AI. Every ID checked against the library and the ticked machines. Sets, reps, weights and setup come from our library, never the AI. Any problem → standard plan. | Save profile, plan and weights | "Here's what Spotter understood" (marked *written by AI*) and the first card |
 | **Workout** | Tap each set | None | Progression rule: all sets → +step (capped). Missed → hold. | Save the sets, update the weight | Result per exercise and a summary |
 | **Comeback** | Daily job, or the "comeback" button | Writes a short guilt-free message and picks 2 easy exercises | 3-days-no-workout rule. IDs validated. Weight = 80%. | Save it | Comeback card on Today |
-| **Plateau** | "Check now" | Explains why and what to try | Rule: weight unchanged 3+ weeks over 3+ sessions | Save to chat history | The flagged lifts and an explanation |
+| **Plateau** (Plus) | "Check now" | Explains why and what to try | Rule: weight unchanged 3+ weeks over 3+ sessions | Save to chat history | The flagged lifts and an explanation |
 | **Coach** | A question | Answers | Risky topics refused *before* the AI. Reply scanned for off-limits topics. | Save the conversation | Reply |
 
 **Stack:** Next.js 16 (App Router) · Tailwind CSS · Postgres (Neon on Vercel, an embedded Postgres locally) · Gemini via OpenRouter · Vercel (hosting + daily Cron).
@@ -117,7 +137,8 @@ Four places, each because the input is free text that a form or keyword list wou
 | AI misreads the person | "Here's what Spotter understood" is shown; they can re-answer any time |
 | Wrong or unavailable machine | The user ticks the machines; unticked ones are never used. A "this looks wrong" button reports it. |
 | Lost phone / cleared cookies | Log in with the access code. Without it the account can't be recovered. |
-| Someone makes thousands of accounts or spams the AI | Per-network sign-up limit and per-person daily AI limits |
+| Someone makes thousands of accounts or spams the AI | Per-network sign-up limit, a small one-time free allowance per account, and daily AI limits |
+| A free user runs out of workouts | A friendly "free try-out complete" screen and a waitlist button. Nothing is charged. |
 | Double tap or replay | Logging the same exercise twice is rejected; a half-finished workout resumes |
 | Someone else's data | Every query is scoped to the logged-in user |
 
@@ -126,6 +147,7 @@ Four places, each because the input is free text that a form or keyword list wou
 - The exercise library is 15 exercises. Set-up steps are general and **not yet verified by gym staff**.
 - One plan type (3-day full body), English only, no video clips yet.
 - Trainer-review queue is not built: flagged users are told to see a professional.
+- **Spotter Plus can't be bought yet.** There is no payment method; it's a waitlist only. Free users who finish their try-out wait until Plus opens.
 - **No email, so no reminders**: a comeback waits for you inside the app. Push/WhatsApp nudges are a v2 item.
 - The legal page is a plain-language draft. Have a lawyer review it before a large public launch.
 - Anyone with your access code can open your account, and lost codes can't be recovered.
@@ -146,7 +168,7 @@ Open http://localhost:3000. No database setup is needed: an embedded Postgres is
 
 ```bash
 npm test          # unit tests: safety, progression, plan, plateau and streak logic
-npm run e2e       # 51 end-to-end checks against the running app
+npm run e2e       # 67 end-to-end checks against the running app
 npm run build     # production build
 ```
 
@@ -161,6 +183,7 @@ npm run build     # production build
    - `SESSION_SECRET` (recommended): a long random string (run `openssl rand -base64 32`). If you skip it, a signing key is made from the database address.
    - `CRON_SECRET`: another long random string, used by the daily comeback job in [vercel.json](vercel.json)
    - Optional: `ALLOW_DEMO_TOOLS=1` to keep the demo tools visible on the live site while you show it off
+   - Optional: `FREE_WORKOUTS`, `FREE_COACH_QUESTIONS`, `FREE_PLAN_BUILDS` (defaults 3, 5, 2) to change the free try-out
    - Optional: `SIGNUP_LIMIT_PER_HOUR` (default 8 per network). Raise it if many people join from one venue's Wi-Fi.
 4. **Redeploy** (Deployments → ⋯ → Redeploy). Visit `/api/health`: it should show `"db": true` and `"ai": true`.
 
@@ -180,6 +203,7 @@ lib/plan.ts, plateau.ts, stats.ts   plan building, plateau rule, streaks (pure, 
 lib/exercises.ts              the exercise library
 lib/workout.ts, comeback.ts   the workout and comeback engines
 lib/auth.ts                   name-only accounts, access codes, cookies
+lib/access.ts                 who gets what: the free try-out vs Plus
 lib/db.ts, queries.ts         Postgres access and the schema
 tests/logic.test.ts           unit tests
 scripts/e2e.mjs               end-to-end tests
@@ -188,4 +212,4 @@ vercel.json                   the daily comeback job
 
 ## Roadmap
 
-Trainer review queue · more exercises, gyms and verified equipment lists · optional email or push reminders · video clips · gym partnerships and an owner retention dashboard · Hindi and regional languages · a survey of 20 beginners and a one-gym pilot to measure retention past month 3.
+Spotter Plus payments (when ready) · trainer review queue · more exercises, gyms and verified equipment lists · optional email or push reminders · video clips · gym partnerships and an owner retention dashboard · Hindi and regional languages · a survey of 20 beginners and a one-gym pilot to measure retention past month 3.

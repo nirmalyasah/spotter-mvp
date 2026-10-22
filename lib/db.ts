@@ -27,6 +27,7 @@ do $$ begin
 end $$;
 alter table users add column if not exists access_code_hash text;
 alter table users add column if not exists ip_hash text;
+alter table users add column if not exists plan text not null default 'free';
 create unique index if not exists users_access_code_hash on users (access_code_hash);
 create index if not exists users_ip_time on users (ip_hash, created_at);
 create table if not exists profiles (
@@ -95,6 +96,10 @@ create table if not exists coach_messages (
   role text not null,
   kind text not null default 'chat',
   content text not null,
+  created_at timestamptz not null default now()
+);
+create table if not exists waitlist (
+  user_id uuid primary key references users(id) on delete cascade,
   created_at timestamptz not null default now()
 );
 create table if not exists reports (

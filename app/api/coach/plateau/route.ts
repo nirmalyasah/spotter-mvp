@@ -6,12 +6,14 @@ import { exerciseResults, getProfile, recordAiUse, usageCount } from "@/lib/quer
 import { byId } from "@/lib/exercises";
 import { APP, LIMITS } from "@/lib/config";
 import { hasOffLimitsTopic } from "@/lib/safety";
+import { isPaid } from "@/lib/access";
 
 export const maxDuration = 60;
 
 // Rule flags it (no weight increase for 3+ weeks); the AI explains why and what to try.
 export const POST = handle(async () => {
   const user = await apiUser();
+  if (!isPaid(user.plan)) return json({ error: "The plateau check is part of Spotter Plus.", code: "upgrade" }, 402);
   const profile = await getProfile(user.id);
   if (!profile) return json({ error: "Finish the quick setup first." }, 400);
   if ((await usageCount(user.id, "plateau")) >= LIMITS.plateauChecksPerDay) return json({ error: "You've checked a lot today. Try again tomorrow." }, 429);

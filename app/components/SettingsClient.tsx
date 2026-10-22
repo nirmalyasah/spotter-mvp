@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { EXERCISES } from "@/lib/exercises";
 import AccessCodeCard from "./AccessCodeCard";
 
-export default function SettingsClient({ available, hasProfile, demo }: { available: string[]; hasProfile: boolean; demo: boolean }) {
+export default function SettingsClient({ available, hasProfile, demo, isPlus }: { available: string[]; hasProfile: boolean; demo: boolean; isPlus: boolean }) {
   const router = useRouter();
   const [avail, setAvail] = useState(available);
   const [msg, setMsg] = useState("");
@@ -64,9 +64,10 @@ export default function SettingsClient({ available, hasProfile, demo }: { availa
           <p className="font-bold">🧪 Demo tools</p>
           <p className="mb-3 text-sm text-slate-500">For showing Spotter off without waiting days or weeks. Hidden on a live site unless switched on.</p>
           <input className="input mb-3" placeholder="Why did you miss days? (optional, e.g. exams)" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} />
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid gap-2 sm:grid-cols-3">
             <button className="btn btn-ghost" disabled={!!busy} onClick={() => call("sim", "/api/demo", "POST", { action: "simulate", reason }, "3 days passed. Open Today to see your comeback session.")}>{busy === "sim" ? "Working…" : "Pretend 3 days passed"}</button>
             <button className="btn btn-ghost" disabled={!!busy} onClick={() => call("seed", "/api/demo", "POST", { action: "seed" }, "Added 6 weeks of history. Check Progress, and the plateau check on Coach.")}>{busy === "seed" ? "Working…" : "Add 6 weeks of history"}</button>
+            <button className="btn btn-ghost" disabled={!!busy} onClick={() => call("plus", "/api/demo", "POST", { action: "toggle-plus" }, isPlus ? "Switched to the free try-out." : "Switched to Spotter Plus (demo only, nothing was charged).")}>{busy === "plus" ? "Working…" : isPlus ? "Switch to free (demo)" : "Preview Plus (demo)"}</button>
           </div>
         </div>)}
 

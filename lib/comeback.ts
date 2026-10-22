@@ -6,6 +6,7 @@ import { onlyKnownIds, fallbackDays } from "./plan.ts";
 import { hasOffLimitsTopic, mentionsRiskyTopic } from "./safety.ts";
 import { getPlan, getProfile, lastActivityMs, pendingComeback, recordAiUse } from "./queries.ts";
 import { daysSince } from "./stats.ts";
+import { getAccess } from "./access.ts";
 
 const DEFAULT_MESSAGE = "Welcome back. No guilt. Here's a short, easy session to get you moving again.";
 
@@ -15,6 +16,11 @@ export async function generateComeback(uid: string, opts: { reason?: string; for
   const plan = await getPlan(uid);
   if (!profile || !plan || profile.flagged) return null;
   if (await pendingComeback(uid)) return null;
+  if (!opts.force) {
+    const plan = (await q<{ plan: string | null }>(`select plan from users where id = $1`, [uid]))[0]?.plan;
+    const access = await getAccess(uid, plan);
+    if (!access.paid && access.workoutsLeft === 0) return null; // out of free workouts: nothing to come back to
+  }
   const missed = daysSince(await lastActivityMs(uid), Date.now());
   if (missed < APP.comebackAfterDays && !opts.force) return null;
 

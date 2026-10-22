@@ -3,6 +3,7 @@ import { byId } from "./exercises.ts";
 import { comebackWeight, nextWeight } from "./progression.ts";
 import { fallbackDays, nextDayIndex } from "./plan.ts";
 import { getPlan, getProfile, getWeights, pendingComeback } from "./queries.ts";
+import { FREE } from "./config.ts";
 
 export const SETS = 3, REPS = 10, COMEBACK_SETS = 2, COMEBACK_REPS = 8, REST_SEC = 90;
 
@@ -26,7 +27,7 @@ async function view(row: { id: string; kind: string; items: Item[] }, message?: 
 }
 
 // Starts today's workout (or a comeback session, or resumes one you left open in the last 12 hours).
-export async function startWorkout(uid: string): Promise<SessionView> {
+export async function startWorkout(uid: string, paid = true): Promise<SessionView> {
   const profile = await getProfile(uid);
   if (!profile) throw new Error("no_profile");
   if (profile.flagged) throw new Error("flagged");
@@ -40,6 +41,12 @@ export async function startWorkout(uid: string): Promise<SessionView> {
       message = (await q<{ message: string }>(`select message from comebacks where user_id = $1 and consumed_at is not null order by consumed_at desc limit 1`, [uid]))[0]?.message;
     }
     return view(open, message);
+  }
+
+  // The free trial covers your first few workouts. After that, Spotter Plus.
+  if (!paid) {
+    const done = (await q<{ n: number }>(`select count(*)::int as n from sessions where user_id = $1 and completed_at is not null`, [uid]))[0].n;
+    if (done >= FREE.workouts) throw new Error("paywall");
   }
 
   const weights = await getWeights(uid);

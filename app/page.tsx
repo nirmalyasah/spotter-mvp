@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Logo from "./components/Logo";
 import NameStart from "./components/NameStart";
+import { APP, FREE } from "@/lib/config";
 import { currentUser } from "@/lib/auth";
 
 const FEATURES = [
@@ -8,13 +9,14 @@ const FEATURES = [
   ["🧠", "A plan built for you", "Tell Spotter you're nervous in your own words. The AI builds a 3-day plan from the machines your gym really has."],
   ["📈", "Weights that update themselves", "Hit every rep and next session's weight goes up by a safe, small step. Miss them and it holds. No spreadsheets."],
   ["🔁", "A comeback after missed days", "Away for 3 days? Spotter writes a shorter, gentler session waiting for you. No guilt, just a way back in."],
-  ["🔍", "Know why you stalled", "When your weight hasn't moved in 3 weeks, Spotter spots it, explains why, and gives you 3 things to try."],
+  ["🔍", "Know why you stalled (Plus)", "When your weight hasn't moved in 3 weeks, Spotter spots it, explains why, and gives you 3 things to try."],
   ["💬", "Ask Spotter anything", "Not sure how a machine works or how heavy to go? Ask your AI coach in plain words and get a plain answer."],
   ["🛡️", "Safety first, always", "Under 18, over 55, or any pain or health condition? Spotter won't guess. It asks you to check with a trainer or doctor."],
 ];
 const FAQ = [
-  ["Is Spotter really free?", "Yes. Every feature is free for everyone: your plan, the workout guide, progress, comebacks, the plateau check and the AI coach. No card needed."],
-  ["Do I need an email or password?", "No. You just tell us your name. You'll get a short access code to save, which lets you log back in from another phone or browser."],
+  ["How does the free version work?", `You can try Spotter once, free: sign up with just your name, get your AI-built plan, and do your first ${FREE.workouts} workouts (one full lap of your 3-day plan). No card needed.`],
+  ["What do I get with Spotter Plus?", `Plus is the paid version for people who train every day, planned at ₹${APP.plusPriceInr} a month: unlimited workouts with automatic weight progression, comeback sessions after missed days, the plateau check, unlimited coach chat and unlimited plan rebuilds. It's coming soon and isn't on sale yet. You can join the waitlist inside the app.`],
+  ["Do I need an email or password to start?", "No. You just tell us your name. You'll get a short access code to save, which lets you log back in from another phone or browser."],
   ["What if I lose my phone or clear my browser?", "Use your access code on the Log in page to get straight back in. If you didn't save one, you'll need to start fresh, so it's worth a screenshot. You can make a new code any time in Settings."],
   ["Is Spotter a replacement for a trainer or doctor?", "No. Spotter gives general beginner guidance. If you have pain, an injury or a health condition, or you're under 18 or over 55, it stops and asks you to talk to a qualified professional first."],
   ["Does it work for my gym?", "You tick the machines and weights your gym has during setup, and Spotter only plans with those. You can change the list any time."],
@@ -30,6 +32,7 @@ export default async function Home() {
         <Logo />
         <nav className="flex items-center gap-2 text-sm font-semibold">
           <a href="#how" className="hidden px-3 py-2 text-slate-600 hover:text-slate-900 sm:block">How it works</a>
+          <a href="#pricing" className="hidden px-3 py-2 text-slate-600 hover:text-slate-900 sm:block">Pricing</a>
           <a href="#faq" className="hidden px-3 py-2 text-slate-600 hover:text-slate-900 sm:block">FAQ</a>
           {user ? <Link href="/app" className="btn btn-primary !py-2">Open app</Link> : (<>
             <Link href="/login" className="px-3 py-2 text-slate-700 hover:text-slate-900">I have a code</Link>
@@ -45,7 +48,7 @@ export default async function Home() {
           <div className="mt-8">
             {user ? <Link href="/app" className="btn btn-primary text-lg">Open your plan</Link> : <NameStart big button="Start free" />}
           </div>
-          <p className="mt-4 text-sm text-slate-500">100% free · every feature · takes 2 minutes</p>
+          <p className="mt-4 text-sm text-slate-500">Try it free · first 3 workouts on us · no card needed</p>
         </div>
         <div className="relative mx-auto w-full max-w-sm">
           <div className="absolute -inset-4 -z-10 rounded-[2rem] bg-gradient-to-br from-emerald-200 via-emerald-100 to-lime-100 blur-xl" />
@@ -92,15 +95,27 @@ export default async function Home() {
         </div>
       </section>
 
-      <section id="free" className="mx-auto max-w-6xl px-4 py-16">
-        <div className="mx-auto max-w-3xl rounded-3xl bg-gradient-to-br from-emerald-50 to-lime-50 p-8 text-center ring-1 ring-emerald-100 sm:p-12">
-          <span className="chip">Free for everyone</span>
-          <h2 className="mt-4 text-3xl font-black tracking-tight sm:text-4xl">Everything is free. No catch.</h2>
-          <p className="mt-3 text-lg text-slate-600">No subscription, no card, not even an email. Spotter gives every beginner the whole product.</p>
-          <ul className="mx-auto mt-6 grid max-w-xl gap-2 text-left text-slate-700 sm:grid-cols-2">
-            {["AI-built 3-day plan for your gym", "Step-by-step exercise guide", "Automatic weight progression", "Comeback sessions after missed days", "Progress charts and streaks", "Plateau check: why you stalled", "Ask Spotter, your AI coach", "Full exercise library"].map((x) => <li key={x}>✓ {x}</li>)}
-          </ul>
-          <div className="mt-8 flex justify-center">{user ? <Link href="/app" className="btn btn-primary">Open your plan</Link> : <NameStart button="Start free" />}</div>
+      <section id="pricing" className="mx-auto max-w-6xl px-4 py-16">
+        <h2 className="text-center text-3xl font-black tracking-tight sm:text-4xl">Try it free. Upgrade if you love it.</h2>
+        <p className="mt-2 text-center text-slate-600">Two simple versions. Start with a free first lap, no card needed.</p>
+        <div className="mx-auto mt-10 grid max-w-4xl gap-6 md:grid-cols-2">
+          <div className="card !p-7">
+            <p className="text-lg font-bold">Try free</p>
+            <p className="mt-2 text-5xl font-black">₹0</p><p className="text-sm text-slate-500">one time, when you sign up</p>
+            <ul className="mt-6 space-y-2.5 text-slate-700">
+              {[`Your first ${FREE.workouts} workouts (one full lap of your plan)`, `AI-built plan for your gym (${FREE.planBuilds} builds)`, "Step-by-step exercise cards and rest timer", "Full exercise library", "Progress charts", `${FREE.coachQuestions} questions for the AI coach`].map((x) => <li key={x}>✓ {x}</li>)}
+            </ul>
+            <div className="mt-7">{user ? <Link href="/app" className="btn btn-ghost w-full">Open the app</Link> : <NameStart button="Start free" />}</div>
+          </div>
+          <div className="card relative !p-7 ring-2 ring-emerald-500">
+            <span className="chip absolute right-5 top-5">Coming soon</span>
+            <p className="text-lg font-bold">Spotter Plus</p>
+            <p className="mt-2 text-5xl font-black">₹{APP.plusPriceInr}<span className="text-lg font-semibold text-slate-500">/month</span></p><p className="text-sm text-slate-500">planned price · for people who train every day</p>
+            <ul className="mt-6 space-y-2.5 text-slate-700">
+              {["Everything in Try free", "Unlimited workouts, every day", "Weights that go up automatically", "Comeback sessions after missed days", "Plateau check: why you stalled", "Unlimited AI coach chat", "Unlimited plan rebuilds"].map((x) => <li key={x}>✓ {x}</li>)}
+            </ul>
+            <p className="notice mt-7 text-center">Spotter Plus isn't on sale yet. {user ? <Link href="/app/settings" className="font-semibold underline">Join the waitlist</Link> : "Start free and you can join the waitlist inside the app."}</p>
+          </div>
         </div>
       </section>
 

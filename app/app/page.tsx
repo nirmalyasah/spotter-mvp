@@ -6,6 +6,8 @@ import { q } from "@/lib/db";
 import { byId } from "@/lib/exercises";
 import { nextDayIndex } from "@/lib/plan";
 import TodayClient from "../components/TodayClient";
+import { getAccess } from "@/lib/access";
+import { APP, FREE } from "@/lib/config";
 
 export const metadata = { title: "Today" };
 
@@ -23,8 +25,9 @@ export default async function Today() {
     </div>
   );
 
-  const [stats, cb, completed] = await Promise.all([
-    getStats(user.id), pendingComeback(user.id),
+  const [stats, cb, access, waitlisted, completed] = await Promise.all([
+    getStats(user.id), pendingComeback(user.id), getAccess(user.id, user.plan),
+    q(`select 1 from waitlist where user_id = $1`, [user.id]),
     q<{ n: number }>(`select count(*)::int as n from sessions where user_id = $1 and kind = 'regular' and completed_at is not null`, [user.id]),
   ]);
   const day = nextDayIndex(completed[0].n, plan!.days.length);
@@ -36,6 +39,8 @@ export default async function Today() {
       preview={preview} dayNumber={day + 1}
       stats={{ total: stats.total, thisWeek: stats.thisWeek, streakWeeks: stats.streakWeeks, daysSince: stats.daysSince, daysPerWeek: profile.days_per_week }}
       comeback={cb ? { message: cb.message, ai: cb.ai, daysMissed: cb.days_missed } : null}
+      access={{ paid: access.paid, workoutsLeft: access.workoutsLeft, freeWorkouts: FREE.workouts, plusPrice: APP.plusPriceInr }}
+      onWaitlist={waitlisted.length > 0}
     />
   );
 }

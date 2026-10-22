@@ -3,7 +3,8 @@ import { q } from "@/lib/db";
 import { apiUser, body, handle, json } from "@/lib/api";
 import { coachReply } from "@/lib/ai";
 import { getProfile, recordAiUse, usageCount } from "@/lib/queries";
-import { LIMITS } from "@/lib/config";
+import { FREE, LIMITS } from "@/lib/config";
+import { getAccess } from "@/lib/access";
 import { hasOffLimitsTopic, mentionsRiskyTopic } from "@/lib/safety";
 
 export const maxDuration = 60;
@@ -13,6 +14,8 @@ const REFER = "I can't help with that one. For pain, health conditions, diet, dr
 export const POST = handle(async (req) => {
   const user = await apiUser();
   const d = await body<z.infer<typeof schema>>(req, schema);
+  const access = await getAccess(user.id, user.plan);
+  if (!access.paid && (access.coachLeft ?? 0) <= 0) return json({ error: `You've used your ${FREE.coachQuestions} free coach questions. Spotter Plus gives you unlimited questions.`, code: "upgrade" }, 402);
   if ((await usageCount(user.id, "coach")) >= LIMITS.coachMessagesPerDay) return json({ error: "That's a lot of questions for one day! Please come back tomorrow." }, 429);
   await q(`insert into coach_messages (user_id, role, content) values ($1,'user',$2)`, [user.id, d.message]);
   let reply = REFER;
