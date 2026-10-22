@@ -49,9 +49,9 @@ export async function POST(req: Request) {
   const weights: Record<string, number> = {};
   for (const e of library) weights[e.id] = e.startKg;
   const user: User = {
-    answers, summary, welcome, fallback, days, weights,
+    summary, welcome, fallback, days, weights,
     cursor: 0, createdAt: Date.now(), logs: [], comeback: null,
   };
-  writeUser(user);
+  await writeUser(user);
   return Response.json(buildView(user));
 }

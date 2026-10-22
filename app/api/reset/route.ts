@@ -1,6 +1,6 @@
 import { writeUser } from "@/lib/db";
 
 export async function POST() {
-  writeUser(null);
+  await writeUser(null);
   return Response.json({ status: "none" });
 }

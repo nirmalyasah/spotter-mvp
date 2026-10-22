@@ -9,7 +9,7 @@ const DAY = 24 * 60 * 60 * 1000;
 
 export async function POST(req: Request) {
   const { reason = "", pretend = false } = await req.json().catch(() => ({}));
-  const user = readUser();
+  const user = await readUser();
   if (!user) return Response.json({ error: "Make a plan first." }, { status: 400 });
 
   // Demo button: move every date 3 days back so "3 days with no log" is true right now
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
   const lastActive = Math.max(user.createdAt, ...user.logs.map((l) => l.at));
   const daysMissed = Math.floor((Date.now() - lastActive) / DAY);
   if (daysMissed < 3) {
-    writeUser(user);
+    await writeUser(user);
     return Response.json({ error: "You're on track! No comeback needed yet." }, { status: 400 });
   }
 
@@ -49,6 +49,6 @@ export async function POST(req: Request) {
   if (!ids.length) ids = library.slice(0, 2).map((e) => e.id);
 
   user.comeback = { ids, message, email, fallback, cursor: 0 };
-  writeUser(user);
+  await writeUser(user);
   return Response.json(buildView(user));
 }

@@ -69,7 +69,7 @@ Everything else is plain code: answer checks, safety rules, sets/reps/rest, prog
 | **Next.js** | One project for the screen and the API routes; deploys to Vercel with no extra setup |
 | **Gemini** (via **OpenRouter**) | Fast model for a sub-30-second answer; one API key. Called through `fetch`, so there's no extra library. |
 | **Plain TypeScript rules** | Safety checks and weight progression must behave identically every time and be easy to test |
-| **A JSON file for storage** | Simplest possible for a one-user demo (see limits below) |
+| **A browser cookie for storage** | Simplest thing that works on Vercel (no database or disk needed) and keeps each visitor's plan separate |
 | **GitHub** | Code, exercise library and tests in one place |
 
 The original scope also names n8n (daily schedule + email) and Vercel Postgres; those are not built yet (see below).
@@ -90,7 +90,7 @@ The original scope also names n8n (daily schedule + email) and Vercel Postgres; 
 ### Known limits (honest list)
 
 - The comeback **email is only a preview on screen** — nothing is sent, and there is **no daily schedule** yet (the "Pretend 3 days passed" button runs the same logic on demand).
-- Storage is **one local file and one global user** (no login). On Vercel the disk is temporary, so a real launch needs a database such as Postgres.
+- Storage is a **cookie in the visitor's own browser** (no login, no database). It's lost if they clear cookies or switch device, and only the last few logs are kept. A real launch needs a database such as Postgres.
 - Only 7 exercises for a single gym, and only day 1 of the 3-day plan is shown.
 - The health-keyword rules are a first version and will miss some phrasings.
 
@@ -130,10 +130,16 @@ lib/safety.ts                    answer checks + safety rules
 lib/progression.ts               +2.5 kg rule, comeback weight
 lib/validatePlan.ts              rejects exercises not in the library
 lib/exercises.json               the exercise library (one gym)
-lib/db.ts, lib/view.ts           storage and what the screen shows
+lib/db.ts, lib/view.ts           cookie storage and what the screen shows
 tests/basic.test.ts              automated checks
 docs/MVP_SCOPE.md                the scope this was built from
 ```
+
+## Deploy to Vercel
+
+1. Go to https://vercel.com/new and import the `spotter-mvp` GitHub repo (framework: Next.js, detected automatically).
+2. Before pressing **Deploy**, open **Environment Variables** and add `OPENROUTER_API_KEY` with your key.
+3. Press **Deploy**. Vercel gives you a link like `https://spotter-mvp.vercel.app`.
 
 ## What's next (v2)
 

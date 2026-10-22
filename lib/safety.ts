@@ -28,7 +28,7 @@ const OFF_LIMITS_AI =
 
 const mentionsHealth = (t: string) => HEALTH_PATTERNS.some((r) => r.test(t));
 
-export type SafetyResult = { ok: true } | { ok: false; message: string };
+export type SafetyResult = { ok: boolean; message?: string };
 
 export function checkSafety(age: number, texts: string[]): SafetyResult {
   const all = texts.join(" ");

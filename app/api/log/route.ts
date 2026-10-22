@@ -4,7 +4,7 @@ import { nextWeight } from "@/lib/progression";
 
 export async function POST(req: Request) {
   const { hit } = await req.json().catch(() => ({}));
-  const user = readUser();
+  const user = await readUser();
   if (!user) return Response.json({ error: "No plan yet." }, { status: 400 });
 
   const ids = user.comeback ? user.comeback.ids : user.days[0];
@@ -22,6 +22,6 @@ export async function POST(req: Request) {
     user.weights[ex.id] = nextWeight(kg, !!hit, ex.maxKg); // plain-code progression rule
     user.cursor += 1;
   }
-  writeUser(user);
+  await writeUser(user);
   return Response.json(buildView(user));
 }
